@@ -25,13 +25,12 @@ namespace CodioToHugoConverter
         private CodioBook _codioBook;
         private HugoBook _hugoBook;
 
-        private Dictionary<string, string> _imagePathMap;
+        private Dictionary<string, string> _codioPathMap = new Dictionary<string, string>();
 
         public ConversionController()
         {
             _source = "";
             _target = "";
-            _imagePathMap = new Dictionary<string, string>();
         }
 
         public string handleViewFileSelection(string state, string path)
@@ -52,7 +51,7 @@ namespace CodioToHugoConverter
                         return "Invalid Directory selected. Codio file structure not present.";
                     }
                 case "HugoTargetSelected":
-                    if(Directory.EnumerateFiles(@path).Count() == 0)
+                    if(Directory.EnumerateDirectories(path).Count() == 0 && Directory.EnumerateFiles(path).Count() == 0)
                     {
                         _target = path;
                         return path;
@@ -71,8 +70,10 @@ namespace CodioToHugoConverter
         {
             _codioBook = ConversionLibrary.ConvertCodioBookJsonToObject(_source + @"\.guides\book.json");
             ConversionLibrary.CreateHugoFileStructure(_target);
-            ConversionLibrary.CopyImagesToHugo(_imagePathMap, _source + "\\.guides\\img", _target + "\\static\\images");
-            _hugoBook = ConversionLibrary.CodioToHugoBook(_codioBook, _target + "\\content");
+            ConversionLibrary.CopyImagesToHugo(_source + "\\.guides\\img", _target + "\\static\\images");
+            _codioPathMap = ConversionLibrary.MapCodioMetadata(_source + @"\.guides\metadata.json");
+            _hugoBook = ConversionLibrary.CodioToHugoBook(_codioBook, _source, _target + "\\content", _codioPathMap);
+            ConversionLibrary.CreateHugoFiles(_hugoBook);
         }
     }
 }

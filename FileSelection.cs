@@ -55,9 +55,21 @@ namespace CodioToHugoConverter
         private void updateCodioText(string newText)
         {
             uxCodioPath.Text = newText;
-            if(!newText.Equals("Invalid Directory selected. Codio file structure not present."))
+            if (!newText.Equals("Invalid Directory selected. Codio file structure not present."))
             {
-                uxHugoTargetButton.Enabled = true;
+                if(uxHugoTargetButton.Enabled == true)
+                {
+                    uxCreateHugoTextbookButton.Enabled = true;
+                }
+                else
+                {
+                    uxHugoTargetButton.Enabled = true;
+                }
+            }
+            else
+            {
+                uxHugoTargetButton.Enabled = false;
+                uxCreateHugoTextbookButton.Enabled = false;
             }
         }
 
@@ -68,6 +80,7 @@ namespace CodioToHugoConverter
             {
                 uxCreateHugoTextbookButton.Enabled = true;
             }
+            else uxCreateHugoTextbookButton.Enabled = false;
         }
 
         private void uxCreateHugoTextbookButton_Click(object sender, EventArgs e)

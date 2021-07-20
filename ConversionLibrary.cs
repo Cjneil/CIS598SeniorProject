@@ -1,4 +1,9 @@
-﻿using CodioToHugoConverter.CodioModel;
+﻿/* Author: Connor Neil
+ * Purpose: Library of static methods for use in the conversion of a Codio textbook to a Hugo textbook format
+ * Uses CodioModel and HugoModel classes
+ * 
+ */
+using CodioToHugoConverter.CodioModel;
 using CodioToHugoConverter.HugoModel;
 using System;
 using System.Collections.Generic;
@@ -24,6 +29,30 @@ namespace CodioToHugoConverter
         }
 
         /// <summary>
+        /// Creates a map of ID to path for Codio Sections
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static Dictionary<string, string> MapCodioMetadata(string path)
+        {
+            CodioMetadata metadata = null;
+            Dictionary<string, string> map = new Dictionary<string, string>();
+            using (StreamReader reader = new StreamReader(path))
+            {
+                string json = reader.ReadToEnd();
+                metadata = Newtonsoft.Json.JsonConvert.DeserializeObject<CodioMetadata>(json);
+            }
+            if(metadata != null)
+            {
+                foreach(CodioSection section in metadata.Sections)
+                {
+                    map.Add(section.Id, section.ContentFile);
+                }
+            }
+            return map;
+        }
+
+        /// <summary>
         /// Creates Hugo file structure at target directory.
         /// </summary>
         /// <param name="targetDirectory"></param>
@@ -34,50 +63,53 @@ namespace CodioToHugoConverter
             Directory.CreateDirectory(targetDirectory + @"\static\files");
             Directory.CreateDirectory(targetDirectory + @"\static\images");
             Directory.CreateDirectory(targetDirectory + @"\themes");
-            //TO-DO find some way to copy the ksucs-hugo-theme
-            //using DirectoryCopy. File paths tested did not seem to work.
         }
+        
+        
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="codioBook">The codio book object to convert to a hugo equivalent</param>
-        /// <param name="path"> the target location to create the hugo book. This should be a hugo content directory</param>
+        /// <param name="hugoPath"> the target location to create the hugo book. This should be a hugo content directory</param>
         /// <returns></returns>
-        public static HugoBook CodioToHugoBook(CodioBook codioBook, string path)
+        public static HugoBook CodioToHugoBook(CodioBook codioBook, string codioPath, string hugoPath, Dictionary<string, string> IDMap)
         {
-            HugoBook hugo = new HugoBook(path);
+            HugoBook hugo = new HugoBook(hugoPath);
             int chapterIndex = 5;
-            foreach(CodioChapter chapter in codioBook.Chapters)
+            foreach (CodioChapter chapter in codioBook.Chapters)
             {
-                hugo.Chapters.Add(CodioToHugoChapter(chapter, chapterIndex, path));
+                hugo.Chapters.Add(CodioToHugoChapter(chapter, chapterIndex, codioPath, hugoPath, IDMap));
                 chapterIndex += 5;
             }
             return hugo;
         }
+
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="codioChapter"> The chapter to be converted</param>
         /// <param name="chapterIndex"> the weight of the chapter relative to other chapters, decides order</param>
-        /// <param name="path"> path of the HugoBook that the HugoChapter will be part of</param>
+        /// <param name="bookPath"> path of the HugoBook that the HugoChapter will be part of</param>
         /// <returns></returns>
-        public static HugoChapter CodioToHugoChapter(CodioChapter codioChapter, int chapterIndex, string path)
+        public static HugoChapter CodioToHugoChapter(CodioChapter codioChapter, int chapterIndex, string codioPath, string bookPath, Dictionary<string, string> IDMap)
         {
             string[] splitTitle = codioChapter.Title.Split(' ');
 
-            string pre = "<b>" + splitTitle[0] + " </b>";
+            string pre = "<b>" + (chapterIndex / 5).ToString() + ". " + " </b>";
             string title = splitTitle[1];
-
-            HugoChapter hugoChapter = new HugoChapter(pre, title, chapterIndex, path + "\\" + codioChapter.Title.Replace('.', '-').Replace(' ', '-'));
+            string chapterPath = bookPath + "\\" + codioChapter.Title.Replace('.', '-').Replace(' ', '-').Replace("--", "-");
+            HugoChapter hugoChapter = new HugoChapter(pre, title, chapterIndex, chapterPath);
             int sectionIndex = 5;
             foreach (CodioPage page in codioChapter.Pages)
             {
                 //Note the fact that a Hugo "section" is basically equivalent to a Codio Page in this context
                 //Codio Sections are simply what pages are referred to in the codio metadata
-                hugoChapter.Sections.Add(CodioToHugoSection(page, sectionIndex, path));
-                sectionIndex += 5;
+                if (!page.Title.ToLower().Contains("quiz")) { 
+                    hugoChapter.Sections.Add(CodioToHugoSection(page, sectionIndex, codioPath, chapterPath, IDMap));
+                    sectionIndex += 5;
+                }
             }
             return hugoChapter;
         }
@@ -85,19 +117,25 @@ namespace CodioToHugoConverter
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="codioPage"> The codio "page" aka section to be converted </param>
-        /// <param name="weightIndex"> the weight of the section relative to others within the chapter, decides order</param>
-        /// <param name="path"> path of the HugoChapter that the HugoChapter will be part of</param>
+        /// <param name="codioPage">The page that is being converted to a Hugo "Section" aka page</param>
+        /// <param name="sectionIndex">The index the section will have, multiple of 5</param>
+        /// <param name="codioPath">The path to the codio content directory</param>
+        /// <param name="chapterPath">the path to the chapter containing this section</param>
+        /// <param name="IDMap">Map of PageIds to the filePath of the codio page itself (used to get which file is being converted)</param>
         /// <returns></returns>
-        public static HugoSection CodioToHugoSection(CodioPage codioPage, int sectionIndex, string path)
+        public static HugoSection CodioToHugoSection(CodioPage codioPage, int sectionIndex, string codioPath, string chapterPath, Dictionary<string, string> IDMap)
         {
             string[] splitTitle = codioPage.Title.Split(new char[] { ' ' }, 2, StringSplitOptions.None);
-            string[] splitDesignation = splitTitle[0].Split(new char[] { '.' }, 2, StringSplitOptions.None);
-            string pre = "<b>" + splitTitle[0] + " </b>";
+            string pre = (sectionIndex/5).ToString() + ". ";
             string title = splitTitle[1];
 
-            HugoSection hugoSection = new HugoSection(pre, title, sectionIndex, codioPage.Id, path + "\\" + codioPage.Title.Replace('.', '-').Replace(' ', '-'));
-            
+            HugoSection hugoSection = new HugoSection(pre, title, sectionIndex, codioPage.PageId, chapterPath + "\\" + codioPage.Title.Replace('.', '-').Replace(' ', '-').Replace("--", "-"));
+            string filePath = "";
+            if (IDMap.TryGetValue(codioPage.PageId, out filePath)) {
+                filePath = filePath.Replace('/', '\\');
+                string completePath = codioPath + @"\" + filePath;
+                hugoSection.CodioFile = File.ReadAllLines(completePath).ToList();
+            }
             return hugoSection;
         }
 
@@ -109,83 +147,116 @@ namespace CodioToHugoConverter
         /// along with a reference to new location in format of 
         /// </param>
         /// <param name="path"> Folder to copy images to</param>
-        public static void CopyImagesToHugo(Dictionary<string, string> imageMap, string source, string target)
+        public static void CopyImagesToHugo(string source, string target)
         {
             List<string> codioImageDirectories = Directory.GetDirectories(source).ToList<string>();
             
             foreach (string directory in codioImageDirectories)
             {
+                FileInfo imageDirectory = new FileInfo(directory);
+                string targetDirectory = target + "\\" + imageDirectory.Name;
+                Directory.CreateDirectory(targetDirectory);
+                
                 List<string> codioImages = Directory.GetFiles(directory).ToList<string>();
                 foreach (string image in codioImages)
                 {
-                    string[] filePath = image.Split('\\');
-                    string imageName = filePath[filePath.Length - 1];
-                    File.Copy(image, target + "\\" + imageName);
-                    string formattedCodioPath = FormatCodioImagePath(image);
-                    string formattedHugoImagePath = FormatHugoImagePath(target + "\\" + imageName);
+                    string targetPath =  targetDirectory + "\\" + (new FileInfo(image).Name);
+                    File.Copy(image, targetPath);
                 }
             }
         }
 
         /// <summary>
-        /// returns a string representing the path reformatted to one Codio Markdown will recognize ex: .guides/img/1/1.2.graph.png (from CC410 chapter 1, section 1.2) 
+        /// Assumes that CreateHugoFileStructure has already been called and
+        /// a hugo file structure properly exists at the given path.
         /// </summary>
-        /// <param name="path"> path to the image </param>
-        /// <returns></returns>
-        private static string FormatCodioImagePath(string path)
+        /// <param name="book">The hugo book to create files based on</param>
+        /// <param name="path">Path to base directory of the new hugo textbook</param>
+        public static void CreateHugoFiles(HugoBook book)
         {
-            string shortened = path.Substring(path.IndexOf("\\.guides\\"));
-            shortened.Replace('\\', '/');
-            return path;
+            string indexPath = book.ContentDirectoryPath + @"\_index.md";
+            File.Create(indexPath).Close();
+            using (StreamWriter writer = new StreamWriter(indexPath))
+            {
+                writer.WriteLine("+++");
+                writer.WriteLine("title = \"Homepage\"");
+                writer.WriteLine("date = " + DateTime.Now.ToLocalTime().ToString("yyyy-MM-dd"));
+                writer.WriteLine("+++");
+                writer.WriteLine("");
+                writer.WriteLine("### Welcome!");
+                writer.WriteLine("This page is meant to be edited to display course welcome info so if your instructor has not done so, tell them they should");
+            }
+            
+            foreach (HugoChapter chapter in book.Chapters)
+            {
+                createHugoChapter(chapter);
+            }
         }
 
-        private static string FormatHugoImagePath(string path)
+        private static void createHugoChapter(HugoChapter chapter)
         {
-            return path;
-        }
-
-
-        /// <summary>
-        /// From https://docs.microsoft.com/en-us/dotnet/standard/io/how-to-copy-directories
-        /// Used for copying ksucs-hugo-theme in CreateHugoFileStructure
-        /// </summary>
-        /// <param name="sourceDirName">Directory to copy</param>
-        /// <param name="destDirName">Target directory, if does not exist it will create it</param>
-        /// <param name="copySubDirs">whether to copy subdirectories</param>
-        private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
-        {
-            // Get the subdirectories for the specified directory.
-            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
-
-            if (!dir.Exists)
+            Directory.CreateDirectory(chapter.Path);
+            string indexPath = chapter.Path + @"\_index.md";
+            File.Create(indexPath).Close();
+            using (StreamWriter writer = new StreamWriter(indexPath))
             {
-                throw new DirectoryNotFoundException(
-                    "Source directory does not exist or could not be found: "
-                    + sourceDirName);
-            }
-
-            DirectoryInfo[] dirs = dir.GetDirectories();
-
-            // If the destination directory doesn't exist, create it.       
-            Directory.CreateDirectory(destDirName);
-
-            // Get the files in the directory and copy them to the new location.
-            FileInfo[] files = dir.GetFiles();
-            foreach (FileInfo file in files)
-            {
-                string tempPath = Path.Combine(destDirName, file.Name);
-                file.CopyTo(tempPath, false);
-            }
-
-            // If copying subdirectories, copy them and their contents to new location.
-            if (copySubDirs)
-            {
-                foreach (DirectoryInfo subdir in dirs)
+                foreach(string row in chapter.Header)
                 {
-                    string tempPath = Path.Combine(destDirName, subdir.Name);
-                    DirectoryCopy(subdir.FullName, tempPath, copySubDirs);
+                    writer.WriteLine(row);
                 }
             }
+
+            foreach(HugoSection section in chapter.Sections)
+            {
+                createHugoSection(section);
+            }
         }
+
+        private static void createHugoSection(HugoSection section)
+        {
+                File.Create(section.Path).Close();
+                using (StreamWriter writer = new StreamWriter(section.Path))
+                {
+
+                    foreach (string row in section.Header)
+                    {
+                        writer.WriteLine(row);
+                    }
+                    foreach (string line in section.CodioFile)
+                    {
+                        string outputLine = line;
+                        if (outputLine.Contains(@".guides/img/"))
+                        {
+                            outputLine = outputLine.Replace(".guides/img/", "../../images/");
+                        }
+
+                        if (line.Trim().Equals("|||"))
+                        {
+                            string newLine = "{{% / notice %}}";
+                            writer.WriteLine(newLine);
+                        }
+                        else if (line.Contains("|||"))
+                        {
+                            string[] split = line.Split(' ');
+                            string newLine = "";
+                            if (split[1].Contains("growthhack"))
+                            {
+                                newLine = "{{% notice tip %}}";
+                            }
+                            else if (split[1].Contains("xdiscipline"))
+                            {
+                                newLine = "{{% notice note %}}";
+                            }
+                            else
+                                newLine = "{{% notice info %}}";
+
+                            writer.WriteLine(newLine);
+                        }
+                        else
+                            writer.WriteLine(outputLine);
+                    }
+                }
+        }
+
     }
 }

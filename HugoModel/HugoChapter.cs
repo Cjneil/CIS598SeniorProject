@@ -20,26 +20,28 @@ namespace CodioToHugoConverter.HugoModel
 
         public string Pre { get; }
 
-        public List<string> IndexLines { get; }
+        public List<string> Header { get; }
 
         public string Path { get; }
 
         public HugoChapter(string pre, string title, int weight, string path)
         {
             Sections = new List<HugoSection>();
-            IndexLines = new List<string>();
+            Header = new List<string>();
             Pre = pre;
             Title = title;
             Weight = weight;
             Path = path;
             Date = DateTime.Now.ToLocalTime();
-            IndexLines.Add("+++");
-            IndexLines.Add(String.Format("title = " + "\"{0}\"", Title));
-            IndexLines.Add("weight = " + Weight);
-            IndexLines.Add("chapter = true");
-            IndexLines.Add(String.Format("pre = " + "\"{0}\"", Pre));
-            IndexLines.Add("+++");
-            IndexLines.Add("\n" + "# " + Title);
+            Header.Add("+++");
+            Header.Add(String.Format("title = " + "\"{0}\"", Title));
+            Header.Add("date = " + Date.ToString("yyyy-MM-dd"));
+            Header.Add("weight = " + Weight);
+            Header.Add("chapter = true");
+            Header.Add(String.Format("pre = " + "\"{0}\"", Pre));
+            Header.Add("+++");
+            Header.Add("### Welcome!");
+            Header.Add("This page is the main page for " + Title);
         }
     }
 }
