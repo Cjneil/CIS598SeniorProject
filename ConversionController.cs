@@ -12,6 +12,8 @@ namespace CodioToHugoConverter
 {
     public class ConversionController
     {
+        private GUIObserver _guiObserver;
+
         /// <summary>
         /// represents the location of file directory for the Codio Textbook  to be converted
         /// </summary>
@@ -22,58 +24,110 @@ namespace CodioToHugoConverter
         /// </summary>
         private string _target;
 
+        /// <summary>
+        /// The model for the Codio version of the textbook. Includes a lot of potentially unnecessary json fields
+        /// </summary>
         private CodioBook _codioBook;
+
+        /// <summary>
+        /// The Model for the Hugo version of the textbook
+        /// </summary>
         private HugoBook _hugoBook;
 
-        private Dictionary<string, string> _codioPathMap = new Dictionary<string, string>();
+        /// <summary>
+        /// Maps the Codio Section ID's to the file path within the codio directory
+        /// ConversionLibrary contains MapCodioMetadata to provide the dictionary
+        /// </summary>
+        private Dictionary<string, string> _codioPathMap;
 
+        /// <summary>
+        /// Does what the name suggests. Controls the conversion
+        /// </summary>
         public ConversionController()
         {
             _source = "";
             _target = "";
         }
 
-        public string handleViewFileSelection(string state, string path)
+        /// <summary>
+        /// Handles validation of Source/Target selection and tells GUI to update
+        /// depending on the result whether valid or invalid.
+        /// </summary>
+        /// <param name="state">Whether codio or hugo path was selected</param>
+        /// <param name="path">The path to the Codio/Hugo directory respectively</param>
+        public void handleViewFileSelection(SelectionState state, string path)
         {
             switch (state)
             {
-                case "CodioFileSelected":
-                    string contentPath = @"C:\Users\Owner\Documents\Classes\CIS 598\cc410-textbook-master\.guides\content";
+                case SelectionState.Codio:
+                    string contentPath = path;
                     string imgPath = path + "\\.guides\\img";
                     string codioPath = path + "\\.codio";
-                    if (Directory.Exists(contentPath) && Directory.Exists(imgPath) && File.Exists(codioPath))
+                    if (ConversionLibrary.validateCodioDirectory(path))
                     {
                         _source = path;
-                        return path;
+                        _guiObserver(ProgramState.ValidCodio, path);
                     }
                     else
                     {
-                        return "Invalid Directory selected. Codio file structure not present.";
+                        _guiObserver(ProgramState.InvalidCodio, "Invalid Directory selected. Codio file structure not present.");
                     }
-                case "HugoTargetSelected":
-                    if(Directory.EnumerateDirectories(path).Count() == 0 && Directory.EnumerateFiles(path).Count() == 0)
+                    break;
+                case SelectionState.Hugo:
+                    if(ConversionLibrary.validateHugoDirectory(path))
                     {
                         _target = path;
-                        return path;
+                        _guiObserver(ProgramState.ValidHugo, path);
                     }
                     else
                     {
-                        return "Invalid directory selected. Directory is not empty.";
+                        _guiObserver(ProgramState.InvalidHugo, "Invalid directory selected. Directory is not empty.");
                     }
+                    break;
                 default:
-                    return "Default Case. This should not be reached.";
+                    _guiObserver(ProgramState.DEFAULT, "");
+                    break;
 
             }
         }
 
+        /// <summary>
+        /// Uses the ConversionLibrary to convert the codio textbook to Hugo format.
+        /// Process converts codio book json to codio model objects and maps the metadata, 
+        /// creates the hugo file structure in target, copies over the images,
+        /// creates hugo model from the codio model, and then creates the new files within the hugo directory
+        /// Any errors will provide a stack trace to the GUI.
+        /// </summary>
         public void handleConvertTextbook()
         {
-            _codioBook = ConversionLibrary.ConvertCodioBookJsonToObject(_source + @"\.guides\book.json");
-            ConversionLibrary.CreateHugoFileStructure(_target);
-            ConversionLibrary.CopyImagesToHugo(_source + "\\.guides\\img", _target + "\\static\\images");
-            _codioPathMap = ConversionLibrary.MapCodioMetadata(_source + @"\.guides\metadata.json");
-            _hugoBook = ConversionLibrary.CodioToHugoBook(_codioBook, _source, _target + "\\content", _codioPathMap);
-            ConversionLibrary.CreateHugoFiles(_hugoBook);
+            try
+            {
+                _codioBook = ConversionLibrary.ConvertCodioBookJsonToObject(_source);
+                _codioPathMap = ConversionLibrary.MapCodioMetadata(_source);
+                ConversionLibrary.CreateHugoFileStructure(_target);
+                ConversionLibrary.CopyImagesToHugo(_source, _target);
+                _hugoBook = ConversionLibrary.CodioToHugoBook(_codioBook, _source, _target, _codioPathMap);
+                ConversionLibrary.CreateHugoFiles(_hugoBook);
+                _guiObserver(ProgramState.ConversionSuccess, "Hugo textbook successfully created from Codio source");
+            }
+            catch(Exception ex)
+            {
+                _source = null;
+                _target = null;
+                _codioBook = null;
+                _hugoBook = null;
+                _codioPathMap = null;
+                _guiObserver(ProgramState.ConversionFailure, ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Adds the observer to update GUI with
+        /// </summary>
+        /// <param name="observer">The delegate that is observing. Will only be updateGUI from FileSelection within this project</param>
+        public void RegisterLoginObserver(GUIObserver observer)
+        {
+            _guiObserver = observer;
         }
     }
 }

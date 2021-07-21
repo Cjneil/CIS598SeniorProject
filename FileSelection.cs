@@ -11,17 +11,49 @@ using System.Windows.Forms;
 
 namespace CodioToHugoConverter
 {
+    public enum SelectionState
+    {
+        Codio,
+        Hugo,
+        DEFAULT
+    }
+
+    public enum ProgramState
+    {
+        InvalidCodio,
+        InvalidHugo,
+        ValidCodio,
+        ValidHugo,
+        ConversionSuccess,
+        ConversionFailure,
+        DEFAULT
+    }
+
     public partial class FileSelection : Form
     {
         private ConversionController _controller;
+        private bool _validHugoTarget;
+        private bool _validCodioSource;
+
         public FileSelection(ConversionController controller)
         {
             InitializeComponent();
             _controller = controller;
         }
 
+        /// <summary>
+        /// Handles the click event of the Select Codio Directory button
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CodioSelectButton_Click(object sender, EventArgs e)
         {
+            if (uxConversionResultBox.Text != "")
+            {
+                uxCodioPath.Text = "";
+                uxHugoPath.Text = "";
+            }
+            uxConversionResultBox.Text = "";
             string selectedFile = "";
             CommonOpenFileDialog dialog = new CommonOpenFileDialog();
             dialog.IsFolderPicker = true;
@@ -31,14 +63,25 @@ namespace CodioToHugoConverter
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 selectedFile = dialog.FileName;
-                updateCodioText(_controller.handleViewFileSelection("CodioFileSelected", selectedFile));
+                _controller.handleViewFileSelection(SelectionState.Codio, selectedFile);
                 
             }
             
         }
 
+        /// <summary>
+        /// Handles the click event of the Select Target Hugo Directory Button
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void HugoTargetButton_Click(object sender, EventArgs e)
         {
+            if(uxConversionResultBox.Text != "")
+            {
+                uxCodioPath.Text = "";
+                uxHugoPath.Text = "";
+            }
+            uxConversionResultBox.Text = "";
             string selectedFile = "";
             CommonOpenFileDialog dialog = new CommonOpenFileDialog();
             dialog.IsFolderPicker = true;
@@ -48,39 +91,43 @@ namespace CodioToHugoConverter
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 selectedFile = dialog.FileName;
-                updateHugoText(_controller.handleViewFileSelection("HugoTargetSelected", selectedFile));
+                _controller.handleViewFileSelection(SelectionState.Hugo, selectedFile);
             }
         }
 
-        private void updateCodioText(string newText)
+        public void updateGUI(ProgramState state, string result)
         {
-            uxCodioPath.Text = newText;
-            if (!newText.Equals("Invalid Directory selected. Codio file structure not present."))
+            switch(state)
             {
-                if(uxHugoTargetButton.Enabled == true)
-                {
-                    uxCreateHugoTextbookButton.Enabled = true;
-                }
-                else
-                {
-                    uxHugoTargetButton.Enabled = true;
-                }
+                case ProgramState.InvalidCodio:
+                    _validCodioSource = false;
+                    uxCodioPath.Text = result;
+                    if (_validCodioSource && _validHugoTarget) uxCreateHugoTextbookButton.Enabled = true;
+                    break;
+                case ProgramState.ValidCodio:
+                    _validCodioSource = true;
+                    uxCodioPath.Text = result;
+                    if (_validCodioSource && _validHugoTarget) uxCreateHugoTextbookButton.Enabled = true;
+                    break;
+                case ProgramState.InvalidHugo:
+                    _validHugoTarget = false;
+                    uxHugoPath.Text = result;
+                    if (_validCodioSource && _validHugoTarget) uxCreateHugoTextbookButton.Enabled = true;
+                    break;
+                case ProgramState.ValidHugo:
+                    _validHugoTarget = true;
+                    uxHugoPath.Text = result;
+                    if (_validCodioSource && _validHugoTarget) uxCreateHugoTextbookButton.Enabled = true;
+                    break;
+                case ProgramState.ConversionFailure:
+                    uxCreateHugoTextbookButton.Enabled = false;
+                    uxCodioPath.Text = "";
+                    uxHugoPath.Text = "";
+                    break;
+                case ProgramState.ConversionSuccess:
+                    uxConversionResultBox.Text = result;
+                    break;
             }
-            else
-            {
-                uxHugoTargetButton.Enabled = false;
-                uxCreateHugoTextbookButton.Enabled = false;
-            }
-        }
-
-        private void updateHugoText(string newText)
-        {
-            uxHugoPath.Text = newText;
-            if (!newText.Equals("Invalid directory selected. Directory is not empty."))
-            {
-                uxCreateHugoTextbookButton.Enabled = true;
-            }
-            else uxCreateHugoTextbookButton.Enabled = false;
         }
 
         private void uxCreateHugoTextbookButton_Click(object sender, EventArgs e)

@@ -38,7 +38,7 @@ namespace CodioToHugoConverter.HugoModel
         /// </summary>
         public List<string> CodioFile { get; set; }
 
-        public List<string> Header { get; } = new List<string>();
+        public List<string> IndexHeader { get; } = new List<string>();
 
         /// <summary>
         /// Represents a Hugo section aka page
@@ -50,17 +50,16 @@ namespace CodioToHugoConverter.HugoModel
         /// <param name="path"></param>
         public HugoSection(string pre, string title, int weight, string id, string path)
         {
-
             Pre = pre;
             Title = title;
             Weight = weight;
             ID = id;
             Path = path + ".md";
-            Header.Add("---");
-            Header.Add("title: \"" + Title + "\"");
-            Header.Add("weight: " + Weight);
-            Header.Add("pre: \"" + Pre + "\"");
-            Header.Add("---");
+            IndexHeader.Add("---");
+            IndexHeader.Add("title: \"" + Title + "\"");
+            IndexHeader.Add("weight: " + Weight);
+            IndexHeader.Add("pre: \"" + Pre + "\"");
+            IndexHeader.Add("---");
         }
     }
 }

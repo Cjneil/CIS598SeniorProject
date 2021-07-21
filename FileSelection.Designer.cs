@@ -36,6 +36,8 @@ namespace CodioToHugoConverter
             this.uxCreateHugoTextbookButton = new System.Windows.Forms.Button();
             this.uxHugoPath = new System.Windows.Forms.TextBox();
             this.uxCodioPath = new System.Windows.Forms.TextBox();
+            this.uxResultLabel = new System.Windows.Forms.Label();
+            this.uxConversionResultBox = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // uxCodioSelectButton
@@ -45,19 +47,18 @@ namespace CodioToHugoConverter
             this.uxCodioSelectButton.Name = "uxCodioSelectButton";
             this.uxCodioSelectButton.Size = new System.Drawing.Size(150, 43);
             this.uxCodioSelectButton.TabIndex = 0;
-            this.uxCodioSelectButton.Text = "Select Codio Folder Location";
+            this.uxCodioSelectButton.Text = "Select Codio Directory";
             this.uxCodioSelectButton.UseVisualStyleBackColor = true;
             this.uxCodioSelectButton.Click += new System.EventHandler(this.CodioSelectButton_Click);
             // 
             // uxHugoTargetButton
             // 
-            this.uxHugoTargetButton.Enabled = false;
             this.uxHugoTargetButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
             this.uxHugoTargetButton.Location = new System.Drawing.Point(27, 123);
             this.uxHugoTargetButton.Name = "uxHugoTargetButton";
             this.uxHugoTargetButton.Size = new System.Drawing.Size(150, 43);
             this.uxHugoTargetButton.TabIndex = 1;
-            this.uxHugoTargetButton.Text = "Select Target Hugo Location";
+            this.uxHugoTargetButton.Text = "Select Target Hugo Directory";
             this.uxHugoTargetButton.UseVisualStyleBackColor = true;
             this.uxHugoTargetButton.Click += new System.EventHandler(this.HugoTargetButton_Click);
             // 
@@ -115,11 +116,31 @@ namespace CodioToHugoConverter
             this.uxCodioPath.Size = new System.Drawing.Size(517, 59);
             this.uxCodioPath.TabIndex = 2;
             // 
+            // uxResultLabel
+            // 
+            this.uxResultLabel.AutoSize = true;
+            this.uxResultLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F);
+            this.uxResultLabel.Location = new System.Drawing.Point(23, 202);
+            this.uxResultLabel.Name = "uxResultLabel";
+            this.uxResultLabel.Size = new System.Drawing.Size(168, 24);
+            this.uxResultLabel.TabIndex = 8;
+            this.uxResultLabel.Text = "Conversion Result:";
+            // 
+            // uxConversionResultBox
+            // 
+            this.uxConversionResultBox.Location = new System.Drawing.Point(27, 229);
+            this.uxConversionResultBox.Multiline = true;
+            this.uxConversionResultBox.Name = "uxConversionResultBox";
+            this.uxConversionResultBox.Size = new System.Drawing.Size(615, 69);
+            this.uxConversionResultBox.TabIndex = 9;
+            // 
             // FileSelection
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(887, 310);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.ClientSize = new System.Drawing.Size(910, 318);
+            this.Controls.Add(this.uxConversionResultBox);
+            this.Controls.Add(this.uxResultLabel);
             this.Controls.Add(this.uxCreateHugoTextbookButton);
             this.Controls.Add(this.HugoTargetLabel);
             this.Controls.Add(this.CodioSourceLabel);
@@ -143,5 +164,7 @@ namespace CodioToHugoConverter
         private System.Windows.Forms.Button uxCreateHugoTextbookButton;
         private System.Windows.Forms.TextBox uxHugoPath;
         private System.Windows.Forms.TextBox uxCodioPath;
+        private System.Windows.Forms.Label uxResultLabel;
+        private System.Windows.Forms.TextBox uxConversionResultBox;
     }
 }
