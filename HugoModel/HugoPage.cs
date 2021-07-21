@@ -9,24 +9,23 @@ namespace CodioToHugoConverter.HugoModel
     public class HugoPage : HugoChildElement
     {
         /// <summary>
-        /// May or may not be useful, but unique identifier from Codio format
+        /// Probably not useful for pages, but unique identifier from Codio format
         /// </summary>
         public string ID { get; }
 
         /// <summary>
-        /// The text in the original Codio File that the HugoSection converted
-        /// Probably should be in CodioSection... but ran out of time to change
+        /// The text in the original Codio Page that the HugoPageconverted
         /// </summary>
         public List<string> CodioFile { get; set; }
 
         /// <summary>
-        /// Represents a Hugo section aka page
+        /// Represents a Hugo page
         /// </summary>
-        /// <param name="pre">prefix of the hugo section for display in the left margin</param>
-        /// <param name="title">Title of the section</param>
+        /// <param name="pre">prefix of the hugo page for display in the left margin</param>
+        /// <param name="title">Title of the page</param>
         /// <param name="weight">Weight of the section for use in ordering. Multiples of 5 only. Lower value = displayed higher</param>
-        /// <param name="id"></param>
-        /// <param name="path"></param>
+        /// <param name="id"> unique identifier from Codio Metadata </param>
+        /// <param name="path"> path to where this page will be created</param>
         public HugoPage(string pre, string title, int weight, string id, string path)
         {
             Pre = pre;

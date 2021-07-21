@@ -8,12 +8,25 @@ namespace CodioToHugoConverter.HugoModel
 {
     public class HugoBook
     {
+        /// <summary>
+        /// List of Top-Level chapters within the textbook
+        /// </summary>
         public List<HugoChapter> Chapters { get; set; } = new List<HugoChapter>();
 
+        /// <summary>
+        /// The path to the content folder of the book itself
+        /// </summary>
         public string ContentDirectoryPath { get; }
 
+        /// <summary>
+        /// The header for the _index.md for the top-level
+        /// </summary>
         public List<string> IndexHeader { get; } = new List<string>();
 
+        /// <summary>
+        /// Creates a Hugo book at a given content path and creates the header for later writing to _index.md 
+        /// </summary>
+        /// <param name="path">The /content/ file that the textbook structure should reside in</param>
         public HugoBook(string path)
         {
             ContentDirectoryPath = path;

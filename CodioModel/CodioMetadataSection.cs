@@ -5,6 +5,9 @@ using System.Globalization;
 using System.Text;
 namespace CodioToHugoConverter.CodioModel
 {
+	/// <summary>
+	/// Mostly useless stuff from the json but of note are the Id and ContentFile used to map the CodioPages to their locations
+	/// </summary>
 	public class CodioMetadataSection
 	{
 		[JsonProperty("id")]

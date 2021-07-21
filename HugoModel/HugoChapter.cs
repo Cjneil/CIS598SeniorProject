@@ -11,7 +11,7 @@ namespace CodioToHugoConverter.HugoModel
     public class HugoChapter
     {
         /// <summary>
-        /// list of sections or pages contained within the section
+        /// List of HugoChildElements contained within the chapter
         /// </summary>
         public List<HugoChildElement> Children { get; set; } = new List<HugoChildElement>();
 

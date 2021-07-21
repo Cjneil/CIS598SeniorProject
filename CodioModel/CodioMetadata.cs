@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace CodioToHugoConverter.CodioModel
 {
+	/// <summary>
+	/// More mostly useless json but the Sections bit was used for iterating through to map Ids to Pages
+	/// </summary>
     class CodioMetadata
     {
 		[JsonProperty("sections")]

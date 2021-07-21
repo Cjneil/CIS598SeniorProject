@@ -11,6 +11,9 @@ using System.Windows.Forms;
 
 namespace CodioToHugoConverter
 {
+    /// <summary>
+    /// States that the GUI can be in dependent on which button is clicked to send to controller
+    /// </summary>
     public enum SelectionState
     {
         Codio,
@@ -18,6 +21,9 @@ namespace CodioToHugoConverter
         DEFAULT
     }
 
+    /// <summary>
+    /// States that the controller can possibly provide to the UpdateGUI method
+    /// </summary>
     public enum ProgramState
     {
         InvalidCodio,
@@ -52,13 +58,16 @@ namespace CodioToHugoConverter
             {
                 uxCodioPath.Text = "";
                 uxHugoPath.Text = "";
+                uxCreateHugoTextbookButton.Enabled = false;
             }
             uxConversionResultBox.Text = "";
-            string selectedFile = "";
-            CommonOpenFileDialog dialog = new CommonOpenFileDialog();
-            dialog.IsFolderPicker = true;
-            dialog.EnsurePathExists = true;
-            dialog.EnsureFileExists = true;
+            string selectedFile;
+            CommonOpenFileDialog dialog = new CommonOpenFileDialog
+            {
+                IsFolderPicker = true,
+                EnsurePathExists = true,
+                EnsureFileExists = true
+            };
 
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
@@ -83,10 +92,12 @@ namespace CodioToHugoConverter
             }
             uxConversionResultBox.Text = "";
             string selectedFile = "";
-            CommonOpenFileDialog dialog = new CommonOpenFileDialog();
-            dialog.IsFolderPicker = true;
-            dialog.EnsurePathExists = true;
-            dialog.EnsureFileExists = true;
+            CommonOpenFileDialog dialog = new CommonOpenFileDialog
+            {
+                IsFolderPicker = true,
+                EnsurePathExists = true,
+                EnsureFileExists = true
+            };
 
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
@@ -95,7 +106,7 @@ namespace CodioToHugoConverter
             }
         }
 
-        public void updateGUI(ProgramState state, string result)
+        public void UpdateGUI(ProgramState state, string result)
         {
             switch(state)
             {
@@ -131,7 +142,7 @@ namespace CodioToHugoConverter
             }
         }
 
-        private void uxCreateHugoTextbookButton_Click(object sender, EventArgs e)
+        private void CreateHugoTextbookButton_Click(object sender, EventArgs e)
         {
             _controller.handleConvertTextbook();
         }

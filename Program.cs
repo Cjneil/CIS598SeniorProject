@@ -27,7 +27,7 @@ namespace CodioToHugoConverter
             
             ConversionController controller = new ConversionController();
             FileSelection mainGUI = new FileSelection(controller);
-            controller.RegisterLoginObserver(mainGUI.updateGUI);
+            controller.RegisterLoginObserver(mainGUI.UpdateGUI);
             Application.Run(mainGUI);
         }
     }

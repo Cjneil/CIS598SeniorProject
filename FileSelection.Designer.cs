@@ -92,7 +92,7 @@ namespace CodioToHugoConverter
             this.uxCreateHugoTextbookButton.TabIndex = 6;
             this.uxCreateHugoTextbookButton.Text = "Create Hugo Textbook";
             this.uxCreateHugoTextbookButton.UseVisualStyleBackColor = true;
-            this.uxCreateHugoTextbookButton.Click += new System.EventHandler(this.uxCreateHugoTextbookButton_Click);
+            this.uxCreateHugoTextbookButton.Click += new System.EventHandler(this.CreateHugoTextbookButton_Click);
             // 
             // uxHugoPath
             // 

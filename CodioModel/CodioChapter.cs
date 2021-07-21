@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace CodioToHugoConverter.CodioModel
 {
+    /// <summary>
+    /// Top-Level directory within a Codio Book. 
+    /// Has CodioChildrenElements as children which can be CodioSections or CodioPages
+    /// </summary>
     public class CodioChapter
     {
         [JsonProperty("title")]

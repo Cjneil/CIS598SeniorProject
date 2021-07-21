@@ -8,6 +8,11 @@ using System.Threading.Tasks;
 
 namespace CodioToHugoConverter.CodioModel
 {
+    /// <summary>
+    /// Abstract element representing children of a chapter. 
+    /// This is extended by CodioPage and CodioSection hence the subtyping to make json work
+    /// This uses JsonSubTypes found at https://github.com/manuc66/JsonSubTypes or in the NuGet Package Manager
+    /// </summary>
     [JsonConverter(typeof(JsonSubtypes), "type")]
     [JsonSubtypes.KnownSubType(typeof(CodioSection), "section")]
     [JsonSubtypes.KnownSubType(typeof(CodioPage), "page")]

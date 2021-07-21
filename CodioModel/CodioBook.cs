@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace CodioToHugoConverter.CodioModel
 {
+    /// <summary>
+    /// Model representing the entire book as a whole. Chapters make up the top-level within it and that's about it.
+    /// </summary>
     public class CodioBook
     {
         [JsonProperty("name")]

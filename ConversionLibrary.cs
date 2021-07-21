@@ -54,7 +54,7 @@ namespace CodioToHugoConverter
         }
 
         /// <summary>
-        /// Creates a map of ID to path for Codio Sections
+        /// Creates a map of ID to path for Codio Pages
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
@@ -145,6 +145,8 @@ namespace CodioToHugoConverter
 
         /// <summary>
         /// Creates a Hugo chapter from Codio Chapter data. These are stored in a list within the HugoBook.
+        /// This in turn calls CodioToHugoElement to create model elements for all children of the chapter
+        /// which are then stored in the chapter itself.
         /// </summary>
         /// <param name="codioChapter"> The chapter to be converted</param>
         /// <param name="chapterIndex"> the weight of the chapter relative to other chapters, decides order</param>
@@ -182,12 +184,12 @@ namespace CodioToHugoConverter
         }
 
         /// <summary>
-        /// Creates a Hugo child element which can be either 
+        /// Creates a Hugo model child element which can be either a section or a page. In the case of a section, will recursively call on children of the section
         /// </summary>
         /// <param name="codioElement">The child element which can be either a section or page depending on if pageID is present</param>
         /// <param name="elementIndex">The index the section will have, multiple of 5</param>
         /// <param name="codioPath">The path to the codio content directory</param>
-        /// <param name="parentPath">the path to the section containing this section</param>
+        /// <param name="parentPath">the path to the chapter/section containing this element</param>
         /// <param name="IDMap">Map of PageIds to the filePath of the codio page itself (used to get which file is being converted)</param>
         /// <returns>The Hugo Section model created from the Codio Page</returns>
         public static HugoChildElement CodioToHugoElement(CodioChildElement codioElement, int elementIndex, string codioPath, string parentPath, Dictionary<string, string> IDMap)
@@ -205,11 +207,10 @@ namespace CodioToHugoConverter
             string fileName = (elementIndex / 5) + "-" + invalidChars.Aggregate(title, (c1, c2) => c1.Replace(c2, '-'));
             string childPath = parentPath + "\\" + fileName;
 
-            if(codioElement is CodioSection)
+            if(codioElement is CodioSection section)
             {
                 HugoSection hugoSection = new HugoSection(pre, title, elementIndex, childPath);
                 int childIndex = 5;
-                CodioSection section = (CodioSection) codioElement;
                 foreach (CodioChildElement element in section.Children)
                 {
                     //Note the fact that all quiz pages are excluded since Hugo does not by default have an equivalent.
@@ -226,8 +227,8 @@ namespace CodioToHugoConverter
                 CodioPage page = (CodioPage) codioElement;
                 HugoPage hugoPage = new HugoPage(pre, title, elementIndex, page.PageId, childPath);
                 //Retrieves the path to the codio page and iterates through to store lines of text in a List in the HugoSection Model
-                string filePath = "";
-                if (IDMap.TryGetValue(page.PageId, out filePath)) {
+                if (IDMap.TryGetValue(page.PageId, out string filePath))
+                {
                     filePath = filePath.Replace('/', '\\');
                     string completePath = codioPath + @"\" + filePath;
                     hugoPage.CodioFile = File.ReadAllLines(completePath).ToList();
@@ -287,6 +288,12 @@ namespace CodioToHugoConverter
             }
         }
 
+        /// <summary>
+        /// Creates a Hugo element. Behavior depends on whether it is a HugoSection or HugoPage
+        /// In the case of a section, creates directory and recursively calls on children
+        /// if a page instead, hands off creation of element to CreateHugoPage
+        /// </summary>
+        /// <param name="element">The Hugo model element to create in file system</param>
         private static void CreateHugoElement(HugoChildElement element)
         {
             if(element is HugoSection section)
@@ -313,13 +320,13 @@ namespace CodioToHugoConverter
         }
 
         /// <summary>
-        /// Creates the file for the given Hugo section(page) and writes the Hugo markdown header before 
+        /// Creates the file for the given Hugo page and writes the Hugo markdown header before 
         /// converting line by line the Codio page that it will be the equivalent of.
         /// Notable potential issue is that if any line includes ||| but is NOT intended to be an info
         /// box of some type, it will create issues but not return an error. 
         /// Also notable is that citations after images
         /// </summary>
-        /// <param name="page">The Hugo section to be created</param>
+        /// <param name="page">The Hugo page to be created</param>
         private static void CreateHugoPage(HugoPage page)
         {
                 File.Create(page.Path).Close();
@@ -352,7 +359,7 @@ namespace CodioToHugoConverter
                         else if (line.Contains("||| "))
                         {
                             string[] split = line.Split(' ');
-                            string newLine = "";
+                            string newLine;
                             if (split[1].Contains("growthhack"))
                             {
                                 newLine = "{{% notice tip %}}";
