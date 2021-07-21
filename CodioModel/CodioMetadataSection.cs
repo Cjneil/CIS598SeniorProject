@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Text;
 namespace CodioToHugoConverter.CodioModel
 {
-	public class Section
+	public class CodioMetadataSection
 	{
 		[JsonProperty("id")]
 		public string Id { get; set; }

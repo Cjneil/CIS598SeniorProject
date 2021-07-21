@@ -36,6 +36,9 @@
     <Reference Include="Json.Net, Version=1.0.33.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Json.Net.1.0.33\lib\netstandard2.0\Json.Net.dll</HintPath>
     </Reference>
+    <Reference Include="JsonSubTypes, Version=1.8.0.0, Culture=neutral, PublicKeyToken=ee75fc290dbc1176, processorArchitecture=MSIL">
+      <HintPath>packages\JsonSubTypes.1.8.0\lib\net47\JsonSubTypes.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\WindowsAPICodePack-Core.1.1.1\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
     </Reference>
@@ -58,12 +61,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CodioModel\CodioMetadataSection.cs" />
     <Compile Include="CodioModel\CodioChapter.cs" />
     <Compile Include="CodioModel\CodioBook.cs" />
     <Compile Include="CodioModel\CodioMetadata.cs" />
+    <Compile Include="CodioModel\CodioChildElement.cs" />
     <Compile Include="CodioModel\CodioPage.cs" />
     <Compile Include="CodioModel\CodioSection.cs" />
-    <Compile Include="CodioModel\Section.cs" />
     <Compile Include="ConversionController.cs" />
     <Compile Include="ConversionLibrary.cs" />
     <Compile Include="FileSelection.cs">
@@ -73,8 +77,10 @@
       <DependentUpon>FileSelection.cs</DependentUpon>
     </Compile>
     <Compile Include="HugoModel\HugoBook.cs" />
-    <Compile Include="HugoModel\HugoChapter.cs" />
+    <Compile Include="HugoModel\HugoChildElement.cs" />
     <Compile Include="HugoModel\HugoSection.cs" />
+    <Compile Include="HugoModel\HugoChapter.cs" />
+    <Compile Include="HugoModel\HugoPage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="FileSelection.resx">
@@ -89,7 +95,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <None Include="HugoModel\deploy.sh" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

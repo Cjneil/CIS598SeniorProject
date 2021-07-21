@@ -123,6 +123,7 @@ namespace CodioToHugoConverter
                     uxCreateHugoTextbookButton.Enabled = false;
                     uxCodioPath.Text = "";
                     uxHugoPath.Text = "";
+                    uxConversionResultBox.Text = result;
                     break;
                 case ProgramState.ConversionSuccess:
                     uxConversionResultBox.Text = result;

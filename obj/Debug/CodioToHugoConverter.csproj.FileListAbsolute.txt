@@ -34,3 +34,4 @@ C:\Users\Owner\Source\Repos\CIS598SeniorProject\obj\Debug\CodioToHugoConverter.c
 C:\Users\Owner\Source\Repos\CIS598SeniorProject\obj\Debug\CodioToHugoConverter.csproj.CopyComplete
 C:\Users\Owner\Source\Repos\CIS598SeniorProject\obj\Debug\CodioToHugoConverter.exe
 C:\Users\Owner\Source\Repos\CIS598SeniorProject\obj\Debug\CodioToHugoConverter.pdb
+C:\Users\Owner\source\repos\CIS598SeniorProject\bin\Debug\JsonSubTypes.dll

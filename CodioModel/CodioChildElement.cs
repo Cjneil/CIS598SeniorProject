@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using JsonSubTypes;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,19 +8,16 @@ using System.Threading.Tasks;
 
 namespace CodioToHugoConverter.CodioModel
 {
-    public class CodioChapter
+    [JsonConverter(typeof(JsonSubtypes), "type")]
+    [JsonSubtypes.KnownSubType(typeof(CodioSection), "section")]
+    [JsonSubtypes.KnownSubType(typeof(CodioPage), "page")]
+    public abstract class CodioChildElement
     {
         [JsonProperty("title")]
         public string Title { get; set; }
-
         [JsonProperty("id")]
         public string Id { get; set; }
-
         [JsonProperty("type")]
         public string Type { get; set; }
-
-        [JsonProperty("children")]
-        public List<CodioChildElement> Children { get; set; }
-
     }
 }

@@ -4,12 +4,9 @@
  */
 using CodioToHugoConverter.CodioModel;
 using CodioToHugoConverter.HugoModel;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CodioToHugoConverter
 {
@@ -72,7 +69,7 @@ namespace CodioToHugoConverter
             }
             if(metadata != null)
             {
-                foreach(CodioSection section in metadata.Sections)
+                foreach(CodioMetadataSection section in metadata.Sections)
                 {
                     map.Add(section.Id, section.ContentFile);
                 }
@@ -170,54 +167,75 @@ namespace CodioToHugoConverter
 
             HugoChapter hugoChapter = new HugoChapter(pre, title, chapterIndex, chapterPath);
 
-            int sectionIndex = 5;
-            foreach (CodioPage page in codioChapter.Pages)
+            int childIndex = 5;
+            foreach (CodioChildElement element in codioChapter.Children)
             {
                 //Note the fact that a Hugo "section" is basically equivalent to a Codio Page in this context
                 //Codio Sections are simply what pages are referred to in the codio metadata
                 //Note the fact that all quiz pages are excluded since Hugo does not by default have an equivalent.
-                if (!page.Title.ToLower().Contains("quiz")) { 
-                    hugoChapter.Sections.Add(CodioToHugoSection(page, sectionIndex, codioPath, chapterPath, IDMap));
-                    sectionIndex += 5;
+                if (!element.Title.ToLower().Contains("quiz")) { 
+                    hugoChapter.Children.Add(CodioToHugoElement(element, childIndex, codioPath, chapterPath, IDMap));
+                    childIndex += 5;
                 }
             }
             return hugoChapter;
         }
 
         /// <summary>
-        /// Creates a Hugo "section" which will be the equivalent of Codio pages. Note that while it should function on Quiz type Codio pages, 
-        /// these will not properly be understood by Hugo as Hugo does not have similar quiz functionality.
+        /// Creates a Hugo child element which can be either 
         /// </summary>
-        /// <param name="codioPage">The page that is being converted to a Hugo "Section" aka page</param>
-        /// <param name="sectionIndex">The index the section will have, multiple of 5</param>
+        /// <param name="codioElement">The child element which can be either a section or page depending on if pageID is present</param>
+        /// <param name="elementIndex">The index the section will have, multiple of 5</param>
         /// <param name="codioPath">The path to the codio content directory</param>
-        /// <param name="chapterPath">the path to the chapter containing this section</param>
+        /// <param name="parentPath">the path to the section containing this section</param>
         /// <param name="IDMap">Map of PageIds to the filePath of the codio page itself (used to get which file is being converted)</param>
         /// <returns>The Hugo Section model created from the Codio Page</returns>
-        public static HugoSection CodioToHugoSection(CodioPage codioPage, int sectionIndex, string codioPath, string chapterPath, Dictionary<string, string> IDMap)
+        public static HugoChildElement CodioToHugoElement(CodioChildElement codioElement, int elementIndex, string codioPath, string parentPath, Dictionary<string, string> IDMap)
         {
             
-            string pre = (sectionIndex/5).ToString() + ". ";
+            string pre = (elementIndex/5).ToString() + ". ";
             string title = "";
-            if (codioPage.Title.Contains('.'))
+            if (codioElement.Title.Contains('.'))
             {
-                title = codioPage.Title.Substring(codioPage.Title.LastIndexOf('.') + 1).Trim();
+                title = codioElement.Title.Substring(codioElement.Title.LastIndexOf('.') + 1).Trim();
             }
-            else title = codioPage.Title;
+            else title = codioElement.Title;
 
             char[] invalidChars = new char[] { '<', '>', ':', '"', '/', '\\', '|', '?', '*' }; //invalid chars for a Windows file
-            string fileName = (sectionIndex / 5) + "-" + invalidChars.Aggregate(title, (c1, c2) => c1.Replace(c2, '-'));
+            string fileName = (elementIndex / 5) + "-" + invalidChars.Aggregate(title, (c1, c2) => c1.Replace(c2, '-'));
+            string childPath = parentPath + "\\" + fileName;
 
-            HugoSection hugoSection = new HugoSection(pre, title, sectionIndex, codioPage.PageId, chapterPath + "\\" + fileName);
-            
-            //Retrieves the path to the codio page and iterates through to store lines of text in a List in the HugoSection Model
-            string filePath = "";
-            if (IDMap.TryGetValue(codioPage.PageId, out filePath)) {
-                filePath = filePath.Replace('/', '\\');
-                string completePath = codioPath + @"\" + filePath;
-                hugoSection.CodioFile = File.ReadAllLines(completePath).ToList();
+            if(codioElement is CodioSection)
+            {
+                HugoSection hugoSection = new HugoSection(pre, title, elementIndex, childPath);
+                int childIndex = 5;
+                CodioSection section = (CodioSection) codioElement;
+                foreach (CodioChildElement element in section.Children)
+                {
+                    //Note the fact that all quiz pages are excluded since Hugo does not by default have an equivalent.
+                    if (!element.Title.ToLower().Contains("quiz"))
+                    {
+                        hugoSection.Children.Add(CodioToHugoElement(element, childIndex, codioPath, childPath, IDMap));
+                        childIndex += 5;
+                    }
+                }
+                return hugoSection;
             }
-            return hugoSection;
+            else
+            {
+                CodioPage page = (CodioPage) codioElement;
+                HugoPage hugoPage = new HugoPage(pre, title, elementIndex, page.PageId, childPath);
+                //Retrieves the path to the codio page and iterates through to store lines of text in a List in the HugoSection Model
+                string filePath = "";
+                if (IDMap.TryGetValue(page.PageId, out filePath)) {
+                    filePath = filePath.Replace('/', '\\');
+                    string completePath = codioPath + @"\" + filePath;
+                    hugoPage.CodioFile = File.ReadAllLines(completePath).ToList();
+                }
+                return hugoPage;
+            }
+            
+            
         }
 
         /// <summary>
@@ -242,7 +260,7 @@ namespace CodioToHugoConverter
             
             foreach (HugoChapter chapter in book.Chapters)
             {
-                createHugoChapter(chapter);
+                CreateHugoChapter(chapter);
             }
         }
 
@@ -250,7 +268,7 @@ namespace CodioToHugoConverter
         /// Creates the actual directory for the hugo chapter and creates the index file within it based on chapter Header information
         /// </summary>
         /// <param name="chapter">The chapter to be created</param>
-        private static void createHugoChapter(HugoChapter chapter)
+        private static void CreateHugoChapter(HugoChapter chapter)
         {
             Directory.CreateDirectory(chapter.Path);
             string indexPath = chapter.Path + @"\_index.md";
@@ -263,9 +281,34 @@ namespace CodioToHugoConverter
                 }
             }
 
-            foreach(HugoSection section in chapter.Sections)
+            foreach(HugoChildElement element in chapter.Children)
             {
-                createHugoSection(section);
+                CreateHugoElement(element);
+            }
+        }
+
+        private static void CreateHugoElement(HugoChildElement element)
+        {
+            if(element is HugoSection section)
+            {
+                Directory.CreateDirectory(section.Path);
+                string indexPath = section.Path + @"\_index.md";
+                File.Create(indexPath).Close();
+                using (StreamWriter writer = new StreamWriter(indexPath))
+                {
+                    foreach (string row in section.Header)
+                    {
+                        writer.WriteLine(row);
+                    }
+                }
+                foreach (HugoChildElement child in section.Children)
+                {
+                    CreateHugoElement(child);
+                }
+            }
+            else if(element is HugoPage page)
+            {
+                CreateHugoPage(page);
             }
         }
 
@@ -276,18 +319,18 @@ namespace CodioToHugoConverter
         /// box of some type, it will create issues but not return an error. 
         /// Also notable is that citations after images
         /// </summary>
-        /// <param name="section">The Hugo section to be created</param>
-        private static void createHugoSection(HugoSection section)
+        /// <param name="page">The Hugo section to be created</param>
+        private static void CreateHugoPage(HugoPage page)
         {
-                File.Create(section.Path).Close();
-                using (StreamWriter writer = new StreamWriter(section.Path))
+                File.Create(page.Path).Close();
+                using (StreamWriter writer = new StreamWriter(page.Path))
                 {
 
-                    foreach (string row in section.IndexHeader)
+                    foreach (string row in page.Header)
                     {
                         writer.WriteLine(row);
                     }
-                    foreach (string line in section.CodioFile)
+                    foreach (string line in page.CodioFile)
                     {
                         string outputLine = line;
 

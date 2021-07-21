@@ -10,7 +10,7 @@ namespace CodioToHugoConverter.CodioModel
     class CodioMetadata
     {
 		[JsonProperty("sections")]
-		public List<CodioSection> Sections { get; set; }
+		public List<CodioMetadataSection> Sections { get; set; }
 
 		[JsonProperty("theme")]
 		public string Theme { get; set; }

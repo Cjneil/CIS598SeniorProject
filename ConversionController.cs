@@ -100,8 +100,6 @@ namespace CodioToHugoConverter
         /// </summary>
         public void handleConvertTextbook()
         {
-            try
-            {
                 _codioBook = ConversionLibrary.ConvertCodioBookJsonToObject(_source);
                 _codioPathMap = ConversionLibrary.MapCodioMetadata(_source);
                 ConversionLibrary.CreateHugoFileStructure(_target);
@@ -109,7 +107,7 @@ namespace CodioToHugoConverter
                 _hugoBook = ConversionLibrary.CodioToHugoBook(_codioBook, _source, _target, _codioPathMap);
                 ConversionLibrary.CreateHugoFiles(_hugoBook);
                 _guiObserver(ProgramState.ConversionSuccess, "Hugo textbook successfully created from Codio source");
-            }
+            /*
             catch(Exception ex)
             {
                 _source = null;
@@ -118,7 +116,7 @@ namespace CodioToHugoConverter
                 _hugoBook = null;
                 _codioPathMap = null;
                 _guiObserver(ProgramState.ConversionFailure, ex.ToString());
-            }
+            }*/
         }
 
         /// <summary>
