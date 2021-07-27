@@ -37,14 +37,30 @@ namespace CodioToHugoConverter
 
     public partial class FileSelection : Form
     {
-        private ConversionController _controller;
+        /// <summary>
+        /// Delegate for controller's handler of a file selection event
+        /// </summary>
+        private FileSelectionDelegate _fileSelectionHandler;
+        /// <summary>
+        /// delegate for controller's handler of a conversion event
+        /// </summary>
+        private ConvertTextbookDelegate _textbookConversionHandler;
+        /// <summary>
+        /// stores whether the current Hugo target is a valid one. 
+        /// Used for logic of enabling/disabling buttons
+        /// </summary>
         private bool _validHugoTarget;
+        /// <summary>
+        /// stores whether the current Codio source is a valid Codio textbook. 
+        /// Used for logic of enabling/disabling buttons
+        /// </summary>
         private bool _validCodioSource;
 
-        public FileSelection(ConversionController controller)
+        public FileSelection(FileSelectionDelegate fileSelectionHandler, ConvertTextbookDelegate textbookHandler)
         {
             InitializeComponent();
-            _controller = controller;
+            _fileSelectionHandler = fileSelectionHandler;
+            _textbookConversionHandler = textbookHandler;
         }
 
         /// <summary>
@@ -72,14 +88,14 @@ namespace CodioToHugoConverter
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 selectedFile = dialog.FileName;
-                _controller.handleViewFileSelection(SelectionState.Codio, selectedFile);
+                _fileSelectionHandler(SelectionState.Codio, selectedFile);
                 
             }
             
         }
 
         /// <summary>
-        /// Handles the click event of the Select Target Hugo Directory Button
+        /// Handles the click event of the Select Target Hugo Directory Button by using delegate to controller handler for the event
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -102,10 +118,15 @@ namespace CodioToHugoConverter
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 selectedFile = dialog.FileName;
-                _controller.handleViewFileSelection(SelectionState.Hugo, selectedFile);
+                _fileSelectionHandler(SelectionState.Hugo, selectedFile);
             }
         }
 
+        /// <summary>
+        /// Updates state of the GUI based on checks made within the controller and the resulting state/info
+        /// </summary>
+        /// <param name="state">The resulting state after controller functions</param>
+        /// <param name="result">Any other necessary info to accompany the state</param>
         public void UpdateGUI(ProgramState state, string result)
         {
             switch(state)
@@ -142,9 +163,14 @@ namespace CodioToHugoConverter
             }
         }
 
+        /// <summary>
+        /// handles the click for Create Hugo Textbook by using delegate to controller handler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CreateHugoTextbookButton_Click(object sender, EventArgs e)
         {
-            _controller.handleConvertTextbook();
+            _textbookConversionHandler();
         }
     }
 }

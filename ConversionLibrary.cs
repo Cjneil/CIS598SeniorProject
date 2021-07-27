@@ -7,6 +7,7 @@ using CodioToHugoConverter.HugoModel;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace CodioToHugoConverter
 {
@@ -329,54 +330,67 @@ namespace CodioToHugoConverter
         /// <param name="page">The Hugo page to be created</param>
         private static void CreateHugoPage(HugoPage page)
         {
-                File.Create(page.Path).Close();
-                using (StreamWriter writer = new StreamWriter(page.Path))
+            File.Create(page.Path).Close();
+            using (StreamWriter writer = new StreamWriter(page.Path))
+            {
+                string pagePath = page.Path.Substring((page.Path.LastIndexOf("content\\")));
+
+                string[] splitPath = pagePath.Split(new string[] { "\\" }, System.StringSplitOptions.None);
+
+                StringBuilder imageReplacementBuilder = new StringBuilder();
+                for (int i = 0; i < splitPath.Length - 1; i++)
                 {
+                    imageReplacementBuilder.Append("../");
+                }
+                imageReplacementBuilder.Append("images/");
 
-                    foreach (string row in page.Header)
+                //this string will replace any instances of .guides/img/ seen within Codio files with the Hugo equivalent relative path
+                string imageReplacementString = imageReplacementBuilder.ToString();
+
+                foreach (string row in page.Header)
+                {
+                    writer.WriteLine(row);
+                }
+
+                foreach (string line in page.CodioFile)
+                {
+                    string outputLine = line;
+
+                    //Checks for an image reference and replaces the reference with a Hugo equivalent based on file depth 
+                    if (outputLine.Contains(@".guides/img/"))
                     {
-                        writer.WriteLine(row);
+                        outputLine = outputLine.Replace(".guides/img/", imageReplacementString);
                     }
-                    foreach (string line in page.CodioFile)
+
+                    //all info boxes should end with a standard ||| line. This check occurs first such that it is not caught
+                    //by the check for the line signalling the beginning of the box formatted ||| type
+                    if (line.Trim().Equals("|||"))
                     {
-                        string outputLine = line;
-
-                        //Checks for an image reference and replaces the reference with a Hugo equivalent. 
-                        //Honestly, the ../../images/ should have just worked as /images/ but it didn't...
-                        if (outputLine.Contains(@".guides/img/"))
+                        string newLine = "{{% / notice %}}";
+                        writer.WriteLine(newLine);
+                    }
+                    //assumes properly formatted starting line of ||| type but does handle additional space between
+                    else if (line.Contains("||| "))
+                    {
+                        string[] split = line.Split(' ');
+                        string newLine;
+                        if (split[1].Contains("growthhack"))
                         {
-                            outputLine = outputLine.Replace(".guides/img/", "../../images/");
+                            newLine = "{{% notice tip %}}";
                         }
-
-                        //all info boxes should end with a standard ||| line. This check occurs first such that it is not caught
-                        //by the check for the line signalling the beginning of the box formatted ||| type
-                        if (line.Trim().Equals("|||"))
+                        else if (split[1].Contains("xdiscipline"))
                         {
-                            string newLine = "{{% / notice %}}";
-                            writer.WriteLine(newLine);
-                        }
-                        //assumes properly formatted starting line of ||| type but does handle additional space between
-                        else if (line.Contains("||| "))
-                        {
-                            string[] split = line.Split(' ');
-                            string newLine;
-                            if (split[1].Contains("growthhack"))
-                            {
-                                newLine = "{{% notice tip %}}";
-                            }
-                            else if (split[1].Contains("xdiscipline"))
-                            {
-                                newLine = "{{% notice note %}}";
-                            }
-                            else
-                                newLine = "{{% notice info %}}";
-
-                            writer.WriteLine(newLine);
+                            newLine = "{{% notice note %}}";
                         }
                         else
-                            writer.WriteLine(outputLine);
+                            newLine = "{{% notice info %}}";
+
+                        writer.WriteLine(newLine);
                     }
+                    else
+                        writer.WriteLine(outputLine);
                 }
+            }
         }
 
     }

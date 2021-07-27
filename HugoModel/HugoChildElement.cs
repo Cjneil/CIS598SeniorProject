@@ -35,11 +35,5 @@ namespace CodioToHugoConverter.HugoModel
         /// Contains the lines needed for header creation for the element
         /// </summary>
         public List<string> Header { get; protected set; } = new List<string>();
-
-        /// <summary>
-        /// Depth of the element relative to content. 
-        /// Chapter level = 1, first level of sections within is 2, then 3 for their children and so on
-        /// </summary>
-        public int ContentDepth { get; protected set; }
     }
 }
