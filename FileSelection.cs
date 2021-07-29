@@ -74,6 +74,8 @@ namespace CodioToHugoConverter
             {
                 uxCodioPath.Text = "";
                 uxHugoPath.Text = "";
+                _validCodioSource = false;
+                _validHugoTarget = false;
                 uxCreateHugoTextbookButton.Enabled = false;
             }
             uxConversionResultBox.Text = "";
@@ -105,6 +107,9 @@ namespace CodioToHugoConverter
             {
                 uxCodioPath.Text = "";
                 uxHugoPath.Text = "";
+                _validCodioSource = false;
+                _validHugoTarget = false;
+                uxCreateHugoTextbookButton.Enabled = false;
             }
             uxConversionResultBox.Text = "";
             string selectedFile = "";

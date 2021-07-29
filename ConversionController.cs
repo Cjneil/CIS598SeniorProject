@@ -35,10 +35,10 @@ namespace CodioToHugoConverter
         private HugoBook _hugoBook;
 
         /// <summary>
-        /// Maps the Codio Section ID's to the file path within the codio directory
+        /// Maps the Codio Section ID's to the representative metadata within the codio directory
         /// ConversionLibrary contains MapCodioMetadata to provide the dictionary
         /// </summary>
-        private Dictionary<string, string> _codioPathMap;
+        private Dictionary<string, CodioMetadataSection> _codioSectionMap;
 
         /// <summary>
         /// Does what the name suggests. Controls the conversion
@@ -103,11 +103,12 @@ namespace CodioToHugoConverter
             try
             {
                 _codioBook = ConversionLibrary.ConvertCodioBookJsonToObject(_source);
-                _codioPathMap = ConversionLibrary.MapCodioMetadata(_source);
+                _codioSectionMap = ConversionLibrary.MapCodioMetadata(_source);
                 ConversionLibrary.CreateHugoFileStructure(_target);
                 ConversionLibrary.CopyImagesToHugo(_source, _target);
-                _hugoBook = ConversionLibrary.CodioToHugoBook(_codioBook, _source, _target, _codioPathMap);
+                _hugoBook = ConversionLibrary.CodioToHugoBook(_codioBook, _source, _target, _codioSectionMap);
                 ConversionLibrary.CreateHugoFiles(_hugoBook);
+                ConversionLibrary.createUsefulHugoFiles(_target);
                 _guiObserver(ProgramState.ConversionSuccess, "Hugo textbook successfully created from Codio source");
             }
             catch (Exception ex)
@@ -116,7 +117,7 @@ namespace CodioToHugoConverter
                 _target = null;
                 _codioBook = null;
                 _hugoBook = null;
-                _codioPathMap = null;
+                _codioSectionMap = null;
                 _guiObserver(ProgramState.ConversionFailure, ex.ToString());
             }
         }

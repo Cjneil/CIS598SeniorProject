@@ -5,6 +5,12 @@ VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodioToHugoConverter", "CodioToHugoConverter.csproj", "{C38CAAE8-F2BB-4C1F-822A-179EACF57693}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7EC5870C-26B1-4406-B578-21C46DCE4359}"
+	ProjectSection(SolutionItems) = preProject
+		config.toml = config.toml
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

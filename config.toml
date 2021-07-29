@@ -1,0 +1,45 @@
+baseURL = 
+languageCode = "en-us"
+title = 
+
+# Change the default theme to be use when building the site with Hugo
+theme = "ksucs-hugo-theme"
+
+googleAnalytics = 
+
+# For search functionality
+[outputs]
+home = [ "HTML", "RSS", "JSON"]
+page = [ "HTML", "Iframeable", "Teleprompter"]
+section = [ "HTML", "Iframeable", "Teleprompter"]
+
+[params]
+  editURL = 
+  description = 
+  author = 
+  showVisitedLinks = false
+  themeVariant = "purple"
+  disableLanguageSwitchingButton = true
+
+[blackfriday]
+  plainIDAnchors = true
+  hrefTargetBlank = true
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+
+[outputFormats]
+  [outputFormats.Iframeable]
+    name = "Iframeable"
+    baseName = "embed"
+    mediaType = "text/html"
+    isPlainText = false
+    isHTML = true
+  [outputFormats.Teleprompter]
+    name = "Teleprompter"
+    baseName = "tele"
+    mediaType = "text/html"
+    isPlainText = false
+    isHtml = true

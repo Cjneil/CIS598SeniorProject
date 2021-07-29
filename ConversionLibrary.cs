@@ -41,8 +41,8 @@ namespace CodioToHugoConverter
         /// but if it wasn't properly formatted the Codio book itself would've been broken anyway so handling this
         /// is not within the scope of the project.
         /// </summary>
-        /// <param name="path">Path </param>
-        /// <returns></returns>
+        /// <param name="path">Path to Codio textbook directory</param>
+        /// <returns>CodioBook model</returns>
         public static CodioBook ConvertCodioBookJsonToObject(string path)
         {
             CodioBook book = null;
@@ -57,12 +57,12 @@ namespace CodioToHugoConverter
         /// <summary>
         /// Creates a map of ID to path for Codio Pages
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public static Dictionary<string, string> MapCodioMetadata(string path)
+        /// <param name="path">Path to codio textbook directory</param>
+        /// <returns>Dictionary mapping section IDs to metadata for the respective section</returns>
+        public static Dictionary<string, CodioMetadataSection> MapCodioMetadata(string path)
         {
             CodioMetadata metadata = null;
-            Dictionary<string, string> map = new Dictionary<string, string>();
+            Dictionary<string, CodioMetadataSection> map = new Dictionary<string, CodioMetadataSection>();
             using (StreamReader reader = new StreamReader(path + "\\.guides\\metadata.json"))
             {
                 string json = reader.ReadToEnd();
@@ -72,7 +72,7 @@ namespace CodioToHugoConverter
             {
                 foreach(CodioMetadataSection section in metadata.Sections)
                 {
-                    map.Add(section.Id, section.ContentFile);
+                    map.Add(section.Id, section);
                 }
             }
             return map;
@@ -130,7 +130,7 @@ namespace CodioToHugoConverter
         /// <param name="codioBook">The codio book object to convert to a hugo equivalent</param>
         /// <param name="hugoPath"> the target location to create the hugo book. This should be a hugo content directory</param>
         /// <returns>The Hugo textbook model</returns>
-        public static HugoBook CodioToHugoBook(CodioBook codioBook, string codioPath, string hugoPath, Dictionary<string, string> IDMap)
+        public static HugoBook CodioToHugoBook(CodioBook codioBook, string codioPath, string hugoPath, Dictionary<string, CodioMetadataSection> IDMap)
         {
             string contentPath = hugoPath + "\\content";
             HugoBook hugo = new HugoBook(contentPath);
@@ -153,7 +153,7 @@ namespace CodioToHugoConverter
         /// <param name="chapterIndex"> the weight of the chapter relative to other chapters, decides order</param>
         /// <param name="contentPath"> path of the HugoBook that the HugoChapter will be part of</param>
         /// <returns>The Hugo Chapter model that was created from Codio data</returns>
-        public static HugoChapter CodioToHugoChapter(CodioChapter codioChapter, int chapterIndex, string codioPath, string contentPath, Dictionary<string, string> IDMap)
+        public static HugoChapter CodioToHugoChapter(CodioChapter codioChapter, int chapterIndex, string codioPath, string contentPath, Dictionary<string, CodioMetadataSection> IDMap)
         {
             string pre = "<b>" + (chapterIndex / 5).ToString() + ". " + " </b>";
 
@@ -176,9 +176,13 @@ namespace CodioToHugoConverter
                 //Note the fact that a Hugo "section" is basically equivalent to a Codio Page in this context
                 //Codio Sections are simply what pages are referred to in the codio metadata
                 //Note the fact that all quiz pages are excluded since Hugo does not by default have an equivalent.
-                if (!element.Title.ToLower().Contains("quiz")) { 
-                    hugoChapter.Children.Add(CodioToHugoElement(element, childIndex, codioPath, chapterPath, IDMap));
-                    childIndex += 5;
+                if (!element.Title.ToLower().Contains("quiz")) {
+                    HugoChildElement createdElement = CodioToHugoElement(element, childIndex, codioPath, chapterPath, IDMap);
+                    if (createdElement != null)
+                    {
+                        hugoChapter.Children.Add(createdElement);
+                        childIndex += 5;
+                    }
                 }
             }
             return hugoChapter;
@@ -193,7 +197,7 @@ namespace CodioToHugoConverter
         /// <param name="parentPath">the path to the chapter/section containing this element</param>
         /// <param name="IDMap">Map of PageIds to the filePath of the codio page itself (used to get which file is being converted)</param>
         /// <returns>The Hugo Section model created from the Codio Page</returns>
-        public static HugoChildElement CodioToHugoElement(CodioChildElement codioElement, int elementIndex, string codioPath, string parentPath, Dictionary<string, string> IDMap)
+        public static HugoChildElement CodioToHugoElement(CodioChildElement codioElement, int elementIndex, string codioPath, string parentPath, Dictionary<string, CodioMetadataSection> IDMap)
         {
             
             string pre = (elementIndex/5).ToString() + ". ";
@@ -227,14 +231,22 @@ namespace CodioToHugoConverter
             {
                 CodioPage page = (CodioPage) codioElement;
                 HugoPage hugoPage = new HugoPage(pre, title, elementIndex, page.PageId, childPath);
+                CodioMetadataSection metaSection = null;
                 //Retrieves the path to the codio page and iterates through to store lines of text in a List in the HugoSection Model
-                if (IDMap.TryGetValue(page.PageId, out string filePath))
+                if (IDMap.TryGetValue(page.PageId, out metaSection))
                 {
+                    string filePath = metaSection.ContentFile;
                     filePath = filePath.Replace('/', '\\');
                     string completePath = codioPath + @"\" + filePath;
                     hugoPage.CodioFile = File.ReadAllLines(completePath).ToList();
                 }
-                return hugoPage;
+                if (metaSection != null && metaSection.TeacherOnly == false)
+                {
+                    return hugoPage;
+                }
+                else
+                    return null;
+                
             }
             
             
@@ -277,13 +289,13 @@ namespace CodioToHugoConverter
             File.Create(indexPath).Close();
             using (StreamWriter writer = new StreamWriter(indexPath))
             {
-                foreach(string row in chapter.IndexHeader)
+                foreach (string row in chapter.IndexHeader)
                 {
                     writer.WriteLine(row);
                 }
             }
 
-            foreach(HugoChildElement element in chapter.Children)
+            foreach (HugoChildElement element in chapter.Children)
             {
                 CreateHugoElement(element);
             }
@@ -393,5 +405,38 @@ namespace CodioToHugoConverter
             }
         }
 
+        public static void createUsefulHugoFiles(string target)
+        {
+            string logoPath = target + @"\layouts\partials\logo.html";
+            File.Create(logoPath).Close();
+            using (StreamWriter writer = new StreamWriter(logoPath))
+            {
+                writer.WriteLine(@"{{/* Place Logo Graphic or Text Here */}}");
+                writer.WriteLine("");
+                writer.WriteLine("K-State Enter Course name here Online");
+            }
+
+            string menuFooterPath = target + @"\layouts\partials\menu-footer.html";
+            File.Create(menuFooterPath).Close();
+            using (StreamWriter writer = new StreamWriter(menuFooterPath))
+            {
+                writer.WriteLine("<p>Built using <a href=\"http://gohugo.io/\">Hugo</a> and <a href=\"https://github.com/russfeld/ksucs-hugo-theme\">ksucs-hugo-theme</a>.</p>");
+                writer.WriteLine("");
+                writer.WriteLine("<a rel=\"license\" href=\"http://creativecommons.org/licenses/by-nc-sa/4.0/\"><img alt=\"Creative Commons License\" style=\"border-width:0; margin: .5rem auto\" src=\"https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png\" /></a><br />This work is licensed under a <a rel=\"license\" href=\"http://creativecommons.org/licenses/by-nc-sa/4.0/\">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.</a>");
+            }
+
+            string deployPath = target + @"\getTheme.sh";
+            File.Create(deployPath).Close();
+            using (StreamWriter writer = new StreamWriter(deployPath))
+            {
+                writer.WriteLine("#!/bin/bash");
+                writer.WriteLine("");
+                writer.WriteLine("git clone https://github.com/russfeld/ksucs-hugo-theme.git themes/ksucs-hugo-theme");
+                writer.WriteLine("exit 0");
+            }
+
+            string configPath = target + @"\config.toml";
+            File.Create(configPath).Close();
+        }
     }
 }
