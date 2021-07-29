@@ -15,7 +15,7 @@ Major added features by conversion to the Hugo framework are the addition of [Re
 
 ## Creating a Hugo Textbook from existing Codio book
 
-Install Hugo > 0.47 on your system. I recommend using Linux or Windows Subsystem for Linux.
+Install Hugo > 0.47 on your system
 
 Install or confirm that you have Microsoft Visual Studio or another method to run a Visual Studio solution.
 
