@@ -1,4 +1,4 @@
-# K-State CS Hugo Framework
+# K-State CS Codio to Hugo Converter
 
 This is a project for converting Codio Textbooks to a [Hugo](https://gohugo.io/)-based web framework for K-State CS lecture content. 
 It uses a lightly adapted version of the [Hugo-theme-learn](https://learn.netlify.com/en/) theme.
