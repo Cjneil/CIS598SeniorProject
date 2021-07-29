@@ -51,4 +51,4 @@ To deploy the content, use the `hugo` command on the destination server to gener
 
 ## Questions?
 
-Contact [Russell Feldhausen](https://russfeld.me) - russfeld@ksu.edu
+Contact [Connor Neil](https://russfeld.me) - cjneil@ksu.edu
